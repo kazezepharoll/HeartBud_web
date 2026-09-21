@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import NavBar from '../../components/NavBar';
 import Footer from '../../components/Footer';
-import { useNavigate } from 'react-router-dom/dist/umd/react-router-dom.development';
+import { useNavigate } from 'react-router-dom';
 
 const Wrapper = styled.div`
   width: 100%;
@@ -158,7 +158,7 @@ function DasboardDoc() {
             <button type="button" className="button" onClick={()=> navigate('/doctor/prescription') }>
               Prescribe Medicine
             </button>
-            <button type="button" className="button" onClick={()=> navigate('/doctor/appointment') }>
+            <button type="button" className="button" onClick={()=> navigate('/doctor/setdiet') }>
               Diet Schedule
             </button>
             <button type="button" className="button">

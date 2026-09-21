@@ -66,7 +66,7 @@ function PrescriptionForm() {
       <h1>Prescription Page</h1>
       <MainSection>
         <label>Select Patient:</label>
-        <select onChange={(e) => setSelectedPatient(JSON.parse(e.target.value))}>
+        <select className ="option" onChange={(e) => setSelectedPatient(JSON.parse(e.target.value))}>
           <option value={null}>Select a patient</option>
           {patients.map((patient) => (
             <option key={patient.idpatients} value={JSON.stringify(patient)}>
@@ -136,7 +136,7 @@ width: 90;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  
+  font-size: 18px;
 
   @media (max-width: 768px) {
     padding: 10px;
@@ -179,6 +179,16 @@ const MainSection = styled.div`
         background-color: #0056b3;
       }
     }
+
+  }
+  label{
+      font-size: 22px;
+      font-weight: bold;
+  }
+  .option{
+    width: 70%;
+    padding: 10px;
+    font-size: 18px;
   }
 
   textarea{
@@ -186,6 +196,7 @@ const MainSection = styled.div`
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #ccc;
+    font-size: 18px;
   }
 `;
 

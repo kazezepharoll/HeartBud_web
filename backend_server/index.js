@@ -1,22 +1,45 @@
 import  express from 'express';
 import nodemailer from 'nodemailer';
+import CircularJSON from 'circular-json'
 import cors from 'cors'
-import  patientsRoutes from './routes/patients.js';
-import  medicinesRoutes from './routes/medicine.js';
+import bcrypt from 'bcrypt';
+import Jwt from 'jsonwebtoken';
+import { body, validationResult } from 'express-validator'
+import http from 'http';
+import { Server } from 'socket.io';
 
 import connection from './db.js';
+import { classifyReading } from './lib/vitalsThresholds.js';
 const app = express();
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, { cors: { origin: '*' } });
 
 app.use(express.json());
 app.use(cors());
+
+// Patients and simulators push live readings into their own `patient:<id>`
+// room; a doctor joins that room while viewing the patient and/or the shared
+// `doctors` room to receive every alert raised across the practice.
+io.on('connection', (socket) => {
+  socket.on('join', ({ role, patientId }) => {
+    if (role === 'doctor') socket.join('doctors');
+    if (patientId) socket.join(`patient:${patientId}`);
+  });
+  socket.on('watchPatient', (patientId) => {
+    if (patientId) socket.join(`patient:${patientId}`);
+  });
+  socket.on('unwatchPatient', (patientId) => {
+    if (patientId) socket.leave(`patient:${patientId}`);
+  });
+});
 
 
     // Configure the SMTP transport for sending emails
 const transporter = nodemailer.createTransport({
   service: 'Gmail',
     auth: {
-      user: 'kazezepharoll47@gmail.com',
-      pass: 'yydfeosmamkbfhxq',
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
     },
   });
   
@@ -24,11 +47,11 @@ const transporter = nodemailer.createTransport({
 // Define the API endpoint for sending emails
 app.post('/sendemail',  async (req, res) => {
   const { recipient, subject, content } = req.body;
-  console.log(recipient)
+  console.log(req.body)
   try{
   // Create the email payload
   const mailOptions = {
-    from: 'kazezepharoll47@gmail.com', // Replace with your Gmail email address
+    from: process.env.SMTP_USER, // Replace with your Gmail email address
     to: recipient,
     subject: subject,
     text: content
@@ -65,76 +88,107 @@ app.get('/', (req, res)=>{
 // 2	kwakye	ozbee@gmail.com	admin	ozee47
 // 3	james k	jk@gmail.com	patient	jk1224
 				
+// Secret key for JWT
+const secretKey = process.env.JWT_SECRET || 'change-this-secret-in-production';
+
+// Endpoint for user login
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
-  // Perform the login query
-  connection.query('SELECT * FROM user WHERE email = ? AND password = ?', [email, password], (err, results) => {
-    console.log(results)
+  // Validate email and password
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  // Query the database for the user
+  connection.query('SELECT * FROM user WHERE email = ?', [email], (err, results) => {
     if (err) {
       console.error('Error querying the database:', err);
       return res.status(500).json({ error: 'Internal server error' });
     }
 
+    console.log(results)
     if (results.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Assuming the "role" field is returned in the results
-    const { role } = results[0];
-    console.log(role)
-    // Redirect users based on their role
-    if (role === 'doctor') {
-      return res.status(200).json({ message: 'Welcome, Doctor!', user: role });
-    } else if (role === 'patient') {
-      return res.status(200).json({ message: 'Welcome, Patient!', user: role });
-    } else {
-      return res.status(403).json({ error: 'Unknown role' });
-    }
+    const user = results[0];
+
+    // Compare the hashed password
+    bcrypt.compare(password, user.password, (bcryptErr, passwordMatch) => {
+      if (bcryptErr) {
+        console.error('Error comparing passwords:', bcryptErr);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      if (!passwordMatch) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      // Create a JWT token for authentication
+      const token = Jwt.sign({ userId: user.idpatients, role: user.role }, secretKey, {
+        expiresIn: '1h', // Token expires in 1 hour
+      });
+
+      // Return the token, user role and id so the client knows which patient/doctor is signed in
+      res.status(200).json({ token, userRole: user.role, fullnames: user.fullnames, userId: user.idpatients });
+    });
   });
 });
 
+
+// Endpoint for user registration
 app.post('/register', (req, res) => {
   const { fullnames, email, role, password } = req.body;
-  console.log(req.body);
 
-  
+  // Validate input
+  if (!fullnames || !email || !role || !password) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
+
+  // Check if the user already exists
   connection.query(
     'SELECT COUNT(*) AS count FROM user WHERE email = ?',
     [email],
     (error, results) => {
       if (error) {
         console.error('Error querying the database:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-        return;
+        return res.status(500).json({ success: false, message: 'Internal server error' });
       }
 
       const userExists = results[0].count > 0;
 
       if (userExists) {
-        res.status(400).json({ success: false, message: 'User with this email already exists' });
-        return;
+        return res.status(400).json({ success: false, message: 'User with this email already exists' });
       }
 
-      //perform the insertion
-  connection.query(
-    `INSERT INTO user (fullnames, email, role, password) VALUES (?, ?, ?, ?)`,
-    [fullnames, email, role, password],
-    (error, result) => {
-      if (error) {
-        console.error('Error inserting data:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-        return;
-      }
+      // Hash the password before insertion
+      bcrypt.hash(password, 10, (hashError, hashedPassword) => {
+        if (hashError) {
+          console.error('Error hashing the password:', hashError);
+          return res.status(500).json({ success: false, message: 'Internal server error' });
+        }
 
-      if (result && result.affectedRows > 0) {
-        res.status(200).json({ success: true, message: 'User is successfully registered' });
-      } else {
-        res.status(400).json({ success: false, error: 'Invalid user credentials' });
-      }
+        // Insert the user into the database
+        connection.query(
+          'INSERT INTO user (fullnames, email, role, password) VALUES (?, ?, ?, ?)',
+          [fullnames, email, role, hashedPassword],
+          (insertError, result) => {
+            if (insertError) {
+              console.error('Error inserting data:', insertError);
+              return res.status(500).json({ success: false, message: 'Internal server error' });
+            }
+
+            if (result && result.affectedRows > 0) {
+              return res.status(200).json({ success: true, message: 'User is successfully registered' });
+            } else {
+              return res.status(400).json({ success: false, message: 'Registration failed' });
+            }
+          }
+        );
+      });
     }
   );
-    })
 });
 
 app.post('/getcode', async (req, res) => {
@@ -163,7 +217,7 @@ app.post('/getcode', async (req, res) => {
   
       // Send the passcode to the user's email
       const mailOptions = {
-        from: 'kazezepharoll47@gmail.com',
+        from: process.env.SMTP_USER,
         to: recipient,
         subject,
         text: content,
@@ -244,16 +298,17 @@ app.post('/verify-passcode', (req, res)=>{
 })
 
 app.post('/appointment', (req, res)=>{
-  const {purpose, day, time, details}  = req.body;
+  const {purpose, date, details, patientId}  = req.body;
 
-  connection.query("SELECT COUNT(*) as appointments FROM appointment WHERE day = ? AND time = ?", [day, time], (err, results)=>{
+  console.log(req.body)
+  connection.query("SELECT COUNT(*) as appointment FROM appointment WHERE date = ? AND idpatient= ?", [date, patientId], (err, results)=>{
     if(err){
       res.status(500).json({success: false, message: "Error executing the get request"})
     }
 
-console.log(results[0].appointments)
-  if(results[0].appointments === 0){
-    connection.query("INSERT INTO appointment(purpose, day, time, details) values(?,?,?,?)", [purpose, day, time, details], (err, response)=>{
+console.log(results)
+  if(results[0].appointment === 0){
+    connection.query("INSERT INTO appointment(purpose, date, details, idpatient) values(?,?,?,?)", [purpose, date, details, patientId], (err, response)=>{
       if(err){
         res.status(500).json({success: false, message: 'Error occured while registering the appointment'})
       }
@@ -296,6 +351,26 @@ app.delete('/deleteappointment/:id', (req, res)=>{
   })
 })
 
+// Admin-safe user list. Never return password hashes or other credentials.
+app.get('/admin/users', (req, res) => {
+  const query = 'SELECT idpatients, fullnames, email, role FROM user ORDER BY idpatients DESC';
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, error: 'Error fetching users' });
+    }
+    return res.json({ success: true, data: results });
+  });
+});
+
+app.get('/admin/stats', (req, res) => {
+  const query = `SELECT role, COUNT(*) AS count FROM user GROUP BY role`;
+  connection.query(query, (error, results) => {
+    if (error) return res.status(500).json({ success: false, error: 'Error fetching stats' });
+    return res.json({ success: true, data: results });
+  });
+});
+
 app.get('/patients', (req, res) => {
   const query = 'SELECT * FROM user where role = "patient"';
   connection.query(query, (error, results) => {
@@ -309,7 +384,7 @@ app.get('/patients', (req, res) => {
 });
 
 app.get('/patients/:id', (req, res) => {
-  const [patient_id] = req.params.id;
+  const patient_id = req.params.id;
 
   const query = `SELECT * FROM user where idpatients = ?`;
   connection.query(query,[patient_id], (error, results) => {
@@ -338,7 +413,7 @@ app.post('/prescriptions', (req, res) => {
   const { medicine, details, patient_id} = req.body;
   const Id = parseInt(patient_id);
 
-  const query = 'INSERT INTO prescriptions ( medicine, recommendation, patient_id) VALUES (?, ?, ?)';
+  const query = 'INSERT INTO prescriptions ( medicine, recommendation, id_patient) VALUES (?, ?, ?)';
   connection.query(query, [JSON.stringify(medicine), details, Id], (error, results) => {
     if (error) {
       console.error(error);
@@ -361,7 +436,235 @@ app.get('/prescriptionList', (req, res)=>{
 })
 
 
-// Start the server
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+const validateInputs = [
+  body('patientId').isInt(),
+  body('dietaryRestrictions').isString().trim(),
+  body('mealPlan').isObject(),
+];
+
+// Secure route to save diet data
+app.post('/setmealplan',
+  validateInputs,
+  async (req, res) => {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    // Extract validated data
+    const { patientId, dietaryRestrictions, mealPlan } = req.body;
+
+    // Ensure user is authenticated and authorized here (e.g., using JWT)
+
+    // Perform database insert with parameterized query
+    const insertQuery = 'INSERT INTO diet_plan (patient_id, dietary_restrictions, meal_plan) VALUES (?, ?, ?)';
+
+    connection.query(insertQuery, [patientId, dietaryRestrictions, JSON.stringify(mealPlan)], (error, results) => {
+      if (error) {
+        console.error('Error inserting data:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+      }
+
+      return res.status(200).json({ success: true, message: 'Diet data successfully saved' });
+    });
+  }
+);
+
+// Create a new API endpoint to fetch meal plans
+app.get('/meal-plans', (req, res) => {
+    // Perform a database query to retrieve meal plans
+    const query = `
+      SELECT user.fullnames, diet_plan.dietary_restrictions, diet_plan.meal_plan
+      FROM user
+      LEFT JOIN diet_plan ON user.idpatients = diet_plan.patient_id
+    `;
+
+    // Use await to execute the query and get the result
+     connection.query(query,(error, response)=>{
+      
+      if(error){
+        console.error('Error fetching meal plans:', error);
+        res.status(500).json({success: false, message: 'Internal server error'})
+      }
+      // const mealPlans = response.map((row) => ({
+      //   fullnames: row.fullnames,
+      //   dietary_restrictions: row.dietary_restrictions,
+      //   meal_plan: JSON.parse(row.meal_plan), // Assuming meal_plan is stored as a JSON string in the database
+      // }));
+  
+      res.status(200).json({ success: true, mealPlans: response });
+    });
+
+    // Extract and format meal plans data
+});
+
+
+
+
+
+
+// ---------------------------------------------------------------------------
+// Wearable / manual vitals monitoring
+// ---------------------------------------------------------------------------
+
+const ALERT_MESSAGES = {
+  attention: 'One or more vitals are outside the normal range and should be reviewed.',
+  critical: 'Critical vitals detected — the patient may need immediate attention.',
+};
+
+// Ingests one vitals reading (from a Bluetooth wearable, the simulator, or a
+// manually entered value), stores it, classifies its severity and — when it
+// is not normal — raises an alert that is pushed live to the patient's own
+// dashboard and to every doctor watching.
+// Coerces missing/blank form fields (e.g. an empty manual-entry input) to
+// null so they never reach MySQL as an empty string, which numeric columns reject.
+const toNullableNumber = (v) => (v === '' || v === undefined || v === null ? null : Number(v));
+
+app.post('/vitals', (req, res) => {
+  const { patientId } = req.body;
+  const heartRate = toNullableNumber(req.body.heartRate);
+  const spo2 = toNullableNumber(req.body.spo2);
+  const systolic = toNullableNumber(req.body.systolic);
+  const diastolic = toNullableNumber(req.body.diastolic);
+  const temperature = toNullableNumber(req.body.temperature);
+  const { source } = req.body;
+
+  if (!patientId) {
+    return res.status(400).json({ success: false, message: 'patientId is required' });
+  }
+
+  const reading = { heartRate, spo2, systolic, diastolic, temperature };
+  const { severity, reasons } = classifyReading(reading);
+  const readingSource = ['wearable', 'simulated', 'manual'].includes(source) ? source : 'manual';
+
+  const insertQuery = `INSERT INTO vitals_readings
+    (patient_id, heart_rate, spo2, systolic, diastolic, temperature, source, severity)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  connection.query(
+    insertQuery,
+    [patientId, heartRate ?? null, spo2 ?? null, systolic ?? null, diastolic ?? null, temperature ?? null, readingSource, severity],
+    (error, result) => {
+      if (error) {
+        console.error('Error saving vitals reading:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+      }
+
+      const savedReading = {
+        id: result.insertId,
+        patientId: Number(patientId),
+        heartRate: heartRate ?? null,
+        spo2: spo2 ?? null,
+        systolic: systolic ?? null,
+        diastolic: diastolic ?? null,
+        temperature: temperature ?? null,
+        source: readingSource,
+        severity,
+        recordedAt: new Date().toISOString(),
+      };
+
+      io.to(`patient:${patientId}`).emit('vitals:new', savedReading);
+
+      if (severity === 'normal') {
+        return res.status(200).json({ success: true, reading: savedReading });
+      }
+
+      const message = `${ALERT_MESSAGES[severity]} (${reasons.join(', ')})`;
+      connection.query(
+        'INSERT INTO alerts (patient_id, reading_id, severity, message) VALUES (?, ?, ?, ?)',
+        [patientId, savedReading.id, severity, message],
+        (alertError, alertResult) => {
+          if (alertError) {
+            console.error('Error saving alert:', alertError);
+            return res.status(200).json({ success: true, reading: savedReading });
+          }
+
+          const alert = {
+            id: alertResult.insertId,
+            patientId: Number(patientId),
+            readingId: savedReading.id,
+            severity,
+            message,
+            acknowledged: false,
+            createdAt: new Date().toISOString(),
+          };
+
+          io.to(`patient:${patientId}`).emit('alert:new', alert);
+          io.to('doctors').emit('alert:new', alert);
+
+          return res.status(200).json({ success: true, reading: savedReading, alert });
+        }
+      );
+    }
+  );
+});
+
+// Recent history for a patient's vitals chart.
+app.get('/vitals/:patientId', (req, res) => {
+  const { patientId } = req.params;
+  const limit = Math.min(parseInt(req.query.limit, 10) || 50, 500);
+
+  const query = `SELECT id, patient_id AS patientId, heart_rate AS heartRate, spo2, systolic, diastolic,
+      temperature, source, severity, recorded_at AS recordedAt
+    FROM vitals_readings WHERE patient_id = ? ORDER BY recorded_at DESC LIMIT ?`;
+
+  connection.query(query, [patientId, limit], (error, results) => {
+    if (error) {
+      console.error('Error fetching vitals history:', error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+    return res.status(200).json({ success: true, data: results.reverse() });
+  });
+});
+
+// Alerts, most recent first. Without a patientId this returns alerts across
+// every patient (the doctor-facing feed); with one it is scoped to a patient.
+app.get('/alerts', (req, res) => {
+  const { patientId, status } = req.query;
+  const clauses = [];
+  const params = [];
+
+  if (patientId) {
+    clauses.push('alerts.patient_id = ?');
+    params.push(patientId);
+  }
+  if (status === 'unacknowledged') clauses.push('alerts.acknowledged = 0');
+
+  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+  const query = `SELECT alerts.id, alerts.patient_id AS patientId, user.fullnames AS patientName,
+      alerts.severity, alerts.message, alerts.acknowledged, alerts.created_at AS createdAt
+    FROM alerts JOIN user ON user.idpatients = alerts.patient_id
+    ${where} ORDER BY alerts.created_at DESC LIMIT 100`;
+
+  connection.query(query, params, (error, results) => {
+    if (error) {
+      console.error('Error fetching alerts:', error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+    return res.status(200).json({ success: true, data: results });
+  });
+});
+
+app.post('/alerts/:id/acknowledge', (req, res) => {
+  const { id } = req.params;
+  connection.query(
+    'UPDATE alerts SET acknowledged = 1, acknowledged_at = NOW() WHERE id = ?',
+    [id],
+    (error, result) => {
+      if (error) {
+        console.error('Error acknowledging alert:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+      }
+      if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Alert not found' });
+      return res.status(200).json({ success: true });
+    }
+  );
+});
+
+// Start the server (HTTP + WebSocket share the same port). Hosts like
+// Railway assign the port dynamically via $PORT.
+const PORT = process.env.PORT || 3000;
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

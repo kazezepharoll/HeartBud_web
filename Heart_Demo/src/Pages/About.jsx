@@ -21,7 +21,7 @@ p{
     font-size: 26px;
     line-height: 30px;
 }
-h1{
+.h1{
     color: #5ec57e;
     font-size: 50px;
 }
@@ -38,7 +38,7 @@ align-items: center;
 flex-direction: column;
 color: #078d44;
 font-weight: bold;
-h1{
+h2{
   font-size: 52px;
 }
 
@@ -65,7 +65,7 @@ h1{
     background-color: #b8e28a;
   }
 
-  h3{
+  h5{
     font-size: 30px;
   }
   p{
@@ -86,14 +86,14 @@ function About() {
         <Wrapper>
       <img src="/medical.png" alt="" sizes="" />
       <div className="profile">
-        <h1>HeardBud Profile</h1>
+        <h1 className='h1'>HeardBud Profile</h1>
         <p>color palettes generator! Create the perfect palette or get inspired by thousands of beautiful color schemes. 
             Start the generator! Explore trending palettes. We are 4 million users! iOS App. Create, browse and save
         </p>
       </div>
     </Wrapper>
     <Service>
-        <h1>Our Services</h1>
+        <h2>Our Services</h2>
         <div className="services">
             <div className="card">
               <img src='/Images/dia.png' alt='No image found' />
@@ -102,12 +102,12 @@ function About() {
             </div>
             <div className="card">
             <img src='/Images/R.png' alt='No image found' />
-              <h3>Management of CVDs</h3>
+              <h5>Management of CVDs</h5>
               <p>Explaining this service</p>
             </div>
             <div className="card">
             <img src='/Images/manage.png' alt='No image found' />
-              <h3> Appointments with the specialist</h3>
+              <h5> Appointments with the specialist</h5>
               <p>Explaining this service</p>
             </div>
         </div>

@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from flask import Flask, jsonify, request, render_template
 from joblib import load
@@ -58,8 +60,12 @@ def predict():
     prediction_list = [str(item) for item in prediction_list]
 
     # Return the prediction as a JSON response
-    return jsonify({'prediction': prediction_list})
+    return jsonify({'prediction': prediction_list[0] if prediction_list else None})
 
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=5173, debug=True)
+    # Railway (and most hosts) assign the port via $PORT; debug must stay off
+    # in any environment reachable from the internet, since Flask's debugger
+    # allows remote code execution.
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
