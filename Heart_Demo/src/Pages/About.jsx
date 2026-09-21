@@ -1,121 +1,49 @@
-import React from 'react'
-import styled from 'styled-components'
-const Wrapper = styled.div`
-width: 100%;
-height: 70vh;
-background-color: #ffffff;
-display: flex;
-justify-content: space-around;
-align-items: center;
-flex-wrap: wrap;
-.profile{
-    width: 500px;
-    height: 500px;
-}
-img{
-    width: 400px;
-    height: 400px;
-};
-p{
-    color: #347571;
-    font-size: 26px;
-    line-height: 30px;
-}
-.h1{
-    color: #5ec57e;
-    font-size: 50px;
-}
-`
-const Container = styled.div`
-width: 100%;
-margin-bottom: 200px;
-`
-const Service = styled.div`
-width: 100%;
-display: flex;
-justify-content: center;
-align-items: center;
-flex-direction: column;
-color: #078d44;
-font-weight: bold;
-h2{
-  font-size: 52px;
-}
+import '../v2/design.css';
+import '../v2/public.css';
 
-.services{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-
-  .card{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    cursor: pointer;
-    width: 500px;
-    height: 500px;
-    background-color: #dcf4ce;
-
-  }
-
-  .card:hover{
-    
-    background-color: #b8e28a;
-  }
-
-  h5{
-    font-size: 30px;
-  }
-  p{
-    font-size: 20px;
-  }
-
-  img{
-    width: 50%;
-    heigth: 50%;
-  }
-}
-
-`
-
-function About() {
+export default function About() {
   return (
-    <Container>
-        <Wrapper>
-      <img src="/medical.png" alt="" sizes="" />
-      <div className="profile">
-        <h1 className='h1'>HeardBud Profile</h1>
-        <p>color palettes generator! Create the perfect palette or get inspired by thousands of beautiful color schemes. 
-            Start the generator! Explore trending palettes. We are 4 million users! iOS App. Create, browse and save
-        </p>
-      </div>
-    </Wrapper>
-    <Service>
-        <h2>Our Services</h2>
-        <div className="services">
-            <div className="card">
-              <img src='/Images/dia.png' alt='No image found' />
-              <h3>Early Diagnosis of CVD</h3>
-              <p>Explaining this service</p>
-            </div>
-            <div className="card">
-            <img src='/Images/R.png' alt='No image found' />
-              <h5>Management of CVDs</h5>
-              <p>Explaining this service</p>
-            </div>
-            <div className="card">
-            <img src='/Images/manage.png' alt='No image found' />
-              <h5> Appointments with the specialist</h5>
-              <p>Explaining this service</p>
-            </div>
+    <section className="hb-section" id="about" style={{ paddingTop: 0 }}>
+      <div className="hb-grid hb-grid-2" style={{ alignItems: 'center', gap: 48 }}>
+        <div>
+          <span className="hb-kicker">About HeartBud</span>
+          <h2 style={{ fontSize: 27, letterSpacing: '-.6px', margin: '10px 0 14px' }}>A clinical decision-support system, not a replacement for your doctor</h2>
+          <p style={{ color: 'var(--muted)', fontSize: 13.5, lineHeight: 1.8, margin: '0 0 16px' }}>
+            Cardiovascular disease remains one of the leading causes of death worldwide, and early detection and consistent monitoring make the biggest difference in outcomes. HeartBud was built to make that monitoring continuous instead of occasional — pairing wearable vitals capture with a trained risk-prediction model, so patients and doctors both see the same picture as it changes.
+          </p>
+          <p style={{ color: 'var(--muted)', fontSize: 13.5, lineHeight: 1.8, margin: 0 }}>
+            Every prediction and alert is decision-support: a signal for a clinician to act on, reviewed alongside a patient’s full history and professional medical judgment — never a diagnosis on its own.
+          </p>
         </div>
-    </Service>
-
-    </Container>
-
-  )
+        <div className="hb-card" style={{ boxShadow: '0 20px 45px rgba(21,38,58,.1)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <span className="hb-kicker">Live preview</span>
+              <strong style={{ display: 'block', fontSize: 22, marginTop: 4 }}>72 <span style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600 }}>bpm</span></strong>
+            </div>
+            <span className="hb-badge healthy">Normal range</span>
+          </div>
+          <div className="hb-chart" style={{ height: 130 }}>
+            <svg viewBox="0 0 700 130" preserveAspectRatio="none">
+              <polyline points="0,80 70,68 140,74 210,52 280,60 350,40 420,58 490,34 560,46 630,28 700,38" fill="none" stroke="#2867d8" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+            </svg>
+          </div>
+          <div className="hb-grid hb-grid-3" style={{ marginTop: 18, gap: 10 }}>
+            <div className="hb-result" style={{ padding: 12 }}>
+              <div className="hb-kicker">SpO2</div>
+              <strong style={{ fontSize: 15 }}>98%</strong>
+            </div>
+            <div className="hb-result" style={{ padding: 12 }}>
+              <div className="hb-kicker">BP</div>
+              <strong style={{ fontSize: 15 }}>118/76</strong>
+            </div>
+            <div className="hb-result" style={{ padding: 12 }}>
+              <div className="hb-kicker">Temp</div>
+              <strong style={{ fontSize: 15 }}>36.7&deg;</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
-
-export default About

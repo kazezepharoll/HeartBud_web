@@ -1,89 +1,92 @@
-import styled from 'styled-components'
-import About from './About';
-import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
 import GeneralBar from '../components/GeneralBar';
+import Footer from '../components/Footer';
+import About from './About';
+import '../v2/design.css';
+import '../v2/public.css';
 
+const features = [
+  {
+    tone: '',
+    icon: '♥',
+    title: 'Wearable vitals monitoring',
+    text: 'Connect a Bluetooth heart-rate device, or use the built-in simulator, to stream live heart rate, SpO2, blood pressure and temperature.',
+  },
+  {
+    tone: 'teal',
+    icon: 'AI',
+    title: 'Cardiovascular risk prediction',
+    text: 'A trained machine-learning model gives clinicians decision support on a patient’s cardiovascular disease risk.',
+  },
+  {
+    tone: 'amber',
+    icon: '!',
+    title: 'Real-time alerts',
+    text: 'Readings outside the normal range automatically notify the patient’s doctor the moment they happen — no manual checking required.',
+  },
+  {
+    tone: 'green',
+    icon: 'Rx',
+    title: 'Care coordination',
+    text: 'Appointments, prescriptions and diet plans keep patients and doctors working from the same up-to-date record.',
+  },
+];
 
-const Wrapper = styled.div`
-width: 100%;
-font-family: arial,sans-sarif;
-h1{
-  color: white;
-}
-`
-
-const Container = styled.div` 
-width: 100%;
-display: flex;
-justify-content: space-around;
-flex-direction: column;
-align-items: center;
-background: url('/cardio.jpg');
-background-repeat: no-repeat;
-background-size: cover;
-background-position: left;
-
-a{
-  width: 200px;
-  padding: 15px 5px;
-  background: #c60000;
-  font-size: 22px;
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-  color: white;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-}
-h1{
-  font-size: 150px;
-  text-shadow: 0px 10px 5px rgba(0, 0, 0, 0.5);
-  text-align: left;
-};
-
-h3{
-  font-size: 30px;
-  text-shadow: 5px 15px 5px rgba(0, 0, 0, 0.5);
-  padding: 10px;
-  color:#fff;
-};
-
-.welcome{
-  text-align: center;
-  width: 50%;
-  margin-bottom: 100px;
-}
-`
-
-const Home = () => {
+export default function Home() {
   return (
     <>
-    <Wrapper>
-    <GeneralBar />
-      <Container>
+      <GeneralBar />
 
-      <h1>HeardBud</h1>
-      <div className="welcome">
-        <h3>
-        Get your heart condition monitored and check your risk of contacting cardiovascular disease!!
-        </h3>
-        <Link to={'/login'} >Get Started</Link>
-      </div>
+      <section className="hb-hero">
+        <div className="hb-hero-inner">
+          <div>
+            <span className="hb-hero-kicker">Personal medical assistant</span>
+            <h1>Cardiovascular care, monitored in real time</h1>
+            <p>HeartBud connects patients and doctors around live vitals from wearable devices, AI-assisted risk prediction, and instant alerts — so nothing falls through the cracks between visits.</p>
+            <div className="hb-hero-actions">
+              <Link to="/register" className="hb-button">Get started</Link>
+              <Link to="/login" className="hb-button secondary">I have an account</Link>
+            </div>
+            <div className="hb-hero-stats">
+              <div><strong>Live</strong><span>Wearable vitals</span></div>
+              <div><strong>AI</strong><span>Risk prediction</span></div>
+              <div><strong>Instant</strong><span>Doctor alerts</span></div>
+            </div>
+          </div>
+          <div className="hb-hero-art">
+            <img src="/cardiologist.jpg" alt="Cardiologist reviewing patient data" />
+          </div>
+        </div>
+      </section>
 
-    </Container>
-    <About />
-    <Footer />
-    </Wrapper>
+      <section className="hb-section" id="services">
+        <div className="hb-section-heading">
+          <span className="hb-kicker">What HeartBud does</span>
+          <h2>Everything you need to manage cardiovascular health</h2>
+          <p>Built for the full loop: patients track and share vitals, doctors review and respond, and the system watches for warning signs in between.</p>
+        </div>
+        <div className="hb-grid hb-grid-4">
+          {features.map((f) => (
+            <div className={`hb-card hb-feature-card ${f.tone}`} key={f.title}>
+              <div className="hb-feature-icon">{f.icon}</div>
+              <h3>{f.title}</h3>
+              <p>{f.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
+      <About />
+
+      <section className="hb-section" style={{ paddingTop: 0 }}>
+        <div className="hb-cta">
+          <h2>Ready to get started?</h2>
+          <p>Create a free patient account and connect your first vitals reading in minutes.</p>
+          <Link to="/register" className="hb-button">Create your account</Link>
+        </div>
+      </section>
+
+      <Footer />
     </>
-
-
-
   );
-};
-
-
-
-export default Home;
+}

@@ -1,111 +1,53 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import { useNavigate, Link } from 'react-router-dom';
+import AuthShell from '../components/AuthShell';
 
-const Container = styled.div`
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #fff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-`;
-
-const Title = styled.h1`
-  color: #007BFF;
-`;
-
-const Text = styled.p`
-  color: #555;
-`;
-
-const ErrorMessage = styled.div`
-  background-color: #f2dede;
-  color: #a94442;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-`;
-
-const Label = styled.label`
-  font-weight: bold;
-  margin-right: 10px;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-`;
-
-const SubmitButton = styled.button`
-  background-color: #007BFF;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
-
-const GetPasscode = () => {
+export default function GetPasscode() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const subject = "Password Reset Process";
+    setError('');
+    const subject = 'Password Reset Process';
 
     try {
-      // Replace the following URL with your backend endpoint for sending the passcode via email
-      const response = await axios.post("http://localhost:3000/getcode", {
+      const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+      const response = await axios.post(`${API}/getcode`, {
         recipient: email,
         subject,
       });
 
       const data = response.data;
-      console.log(data); // For debugging purposes
-
       if (data.success === true) {
-        // Passcode sent successfully, navigate to the reset password page
-        navigate(`/verify-passcode`,{state: {email: email}});
+        navigate('/verify-passcode', { state: { email } });
       } else {
         setError(data.error);
       }
-    } catch (error) {
-      console.error('Error sending passcode:', error);
+    } catch (err) {
+      console.error('Error sending passcode:', err);
       setError('Error sending passcode. Please try again later.');
     }
   };
 
   return (
-    <Container>
-      <Title>Restore Password</Title>
-      <Text>Enter your email address to get started, and we will send you a passcode that you must enter to reset your password.</Text>
-
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-
-      <Form onSubmit={handleSubmit}>
-        <Label htmlFor="email">Email:</Label>
-        <Input type="email" name="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <SubmitButton type="submit">GET PASSCODE</SubmitButton>
-      </Form>
-
-      <Text>Not registered yet? <a href="/register">Click here</a></Text>
-    </Container>
+    <AuthShell
+      title="Restore your password"
+      subtitle="Enter your email address and we'll send you a passcode to reset your password."
+      error={error}
+      backTo="/login"
+      backLabel="Back to sign in"
+      footer={<>Not registered yet? <Link to="/register">Create an account</Link></>}
+    >
+      <form className="hb-auth-form" onSubmit={handleSubmit}>
+        <div className="hb-field">
+          <label htmlFor="email">Email</label>
+          <input type="email" name="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </div>
+        <button type="submit" className="hb-button">Send passcode</button>
+      </form>
+    </AuthShell>
   );
-};
-
-export default GetPasscode;
+}

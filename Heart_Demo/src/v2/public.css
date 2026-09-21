@@ -1,0 +1,202 @@
+/* Public-facing site: marketing pages (Home/About) and the auth flow
+   (Login/Register/passcode/reset). Built on the same tokens and component
+   patterns as the app shell in design.css so the whole product reads as one
+   system instead of two different apps stitched together. */
+
+/* ---------- Nav ---------- */
+.hb-pub-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.hb-pub-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.hb-pub-brand .hb-brand-mark { width: 38px; height: 38px; font-size: 19px; }
+.hb-pub-brand strong { font-size: 18px; letter-spacing: -.4px; }
+.hb-pub-nav-links { display: flex; align-items: center; gap: 34px; }
+.hb-pub-nav-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+.hb-pub-nav-links a:hover { color: var(--ink); }
+.hb-pub-nav-actions { display: flex; align-items: center; gap: 10px; }
+.hb-pub-nav-mobile-toggle {
+  display: none;
+  border: 0;
+  background: #f2f6fa;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+}
+
+/* ---------- Hero ---------- */
+.hb-hero {
+  background: linear-gradient(155deg, var(--navy) 0%, #163457 65%, #124a5c 100%);
+  color: #e6edf7;
+  padding: 76px 40px;
+}
+.hb-hero-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.05fr .95fr;
+  gap: 48px;
+  align-items: center;
+}
+.hb-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: #8fd6c9;
+  background: rgba(30, 141, 155, .18);
+  border: 1px solid rgba(78, 197, 184, .35);
+  padding: 6px 12px;
+  border-radius: 99px;
+}
+.hb-hero h1 {
+  font-size: 44px;
+  line-height: 1.12;
+  letter-spacing: -1.2px;
+  margin: 18px 0 16px;
+  color: #fff;
+}
+.hb-hero p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #b9c8dc;
+  max-width: 480px;
+  margin: 0 0 28px;
+}
+.hb-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.hb-hero-actions .hb-button { padding: 13px 22px; font-size: 13px; }
+.hb-hero-stats { display: flex; gap: 28px; margin-top: 40px; }
+.hb-hero-stats div strong { display: block; font-size: 22px; color: #fff; letter-spacing: -.5px; }
+.hb-hero-stats div span { font-size: 11px; color: #93a6bf; }
+.hb-hero-art {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(4, 14, 28, .45);
+  aspect-ratio: 4/3;
+}
+.hb-hero-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hb-hero-art::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(200deg, rgba(16,36,62,0) 40%, rgba(16,36,62,.55) 100%);
+}
+
+/* ---------- Sections ---------- */
+.hb-section { max-width: 1180px; margin: 0 auto; padding: 84px 40px; }
+.hb-section-heading { max-width: 620px; margin: 0 auto 44px; text-align: center; }
+.hb-section-heading .hb-kicker { display: block; margin-bottom: 10px; text-align: center; }
+.hb-section-heading h2 { font-size: 30px; letter-spacing: -.8px; margin: 0 0 12px; }
+.hb-section-heading p { color: var(--muted); font-size: 14px; line-height: 1.7; margin: 0; }
+
+.hb-feature-card { padding: 26px; text-align: left; }
+.hb-feature-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: grid; place-items: center;
+  background: #eef5ff; color: #3169c9; font-size: 19px; margin-bottom: 16px;
+}
+.hb-feature-card h3 { font-size: 15px; margin: 0 0 8px; letter-spacing: -.2px; }
+.hb-feature-card p { font-size: 12.5px; color: var(--muted); line-height: 1.7; margin: 0; }
+.hb-feature-card.teal .hb-feature-icon { background: #e9f8f5; color: #148d7e; }
+.hb-feature-card.green .hb-feature-icon { background: #eaf8f0; color: #17955f; }
+.hb-feature-card.amber .hb-feature-icon { background: #fff6e6; color: #c07a13; }
+
+.hb-cta {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 48px;
+  text-align: center;
+  box-shadow: 0 3px 14px rgba(21,38,58,.035);
+}
+.hb-cta h2 { font-size: 24px; margin: 0 0 10px; letter-spacing: -.5px; }
+.hb-cta p { color: var(--muted); font-size: 13px; margin: 0 0 22px; }
+
+/* ---------- Footer ---------- */
+.hb-pub-footer { background: var(--navy); color: #9fb1c6; padding: 56px 40px 28px; }
+.hb-pub-footer-inner { max-width: 1180px; margin: 0 auto; display: flex; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+.hb-pub-footer-brand { max-width: 280px; }
+.hb-pub-footer-brand .hb-pub-brand { color: #fff; margin-bottom: 12px; }
+.hb-pub-footer-brand p { font-size: 12px; line-height: 1.7; color: #8195b0; }
+.hb-pub-footer-cols { display: flex; gap: 56px; flex-wrap: wrap; }
+.hb-pub-footer-col strong { display: block; color: #fff; font-size: 12px; margin-bottom: 14px; }
+.hb-pub-footer-col a { display: block; color: #93a6bf; text-decoration: none; font-size: 12.5px; margin-bottom: 10px; }
+.hb-pub-footer-col a:hover { color: #fff; }
+.hb-pub-footer-bottom { max-width: 1180px; margin: 40px auto 0; padding-top: 22px; border-top: 1px solid #223b5a; font-size: 11px; color: #6f84a0; }
+
+/* ---------- Auth shell ---------- */
+.hb-auth-shell { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+.hb-auth-side {
+  background: linear-gradient(160deg, var(--navy) 0%, #163457 70%, #124a5c 100%);
+  color: #e6edf7;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.hb-auth-side-quote { max-width: 380px; }
+.hb-auth-side-quote p { font-size: 20px; line-height: 1.5; letter-spacing: -.3px; color: #fff; margin: 0 0 14px; }
+.hb-auth-side-quote span { font-size: 12px; color: #93a6bf; }
+.hb-auth-main { display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+.hb-auth-card { width: 100%; max-width: 400px; }
+.hb-auth-card .hb-pub-brand { margin-bottom: 28px; }
+.hb-auth-card h1 { font-size: 23px; margin: 0 0 8px; letter-spacing: -.5px; }
+.hb-auth-card > p.hb-auth-subtitle { color: var(--muted); font-size: 13px; margin: 0 0 26px; }
+.hb-auth-form { display: flex; flex-direction: column; gap: 15px; }
+.hb-auth-form .hb-field label { font-size: 12px; }
+.hb-auth-form .hb-button { width: 100%; padding: 12px; font-size: 13px; margin-top: 6px; }
+.hb-auth-foot { margin-top: 22px; font-size: 12.5px; color: var(--muted); text-align: center; }
+.hb-auth-foot a { color: var(--blue); font-weight: 700; text-decoration: none; }
+.hb-auth-error {
+  background: #fff0f0; border: 1px solid #f3c7c5; color: #8a2f2c;
+  padding: 11px 13px; border-radius: 10px; font-size: 12px; margin-bottom: 18px;
+}
+.hb-auth-back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 700; margin-bottom: 20px; }
+.hb-auth-back:hover { color: var(--ink); }
+
+/* ---------- 404 ---------- */
+.hb-notfound { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+.hb-notfound .hb-brand-mark { width: 56px; height: 56px; font-size: 26px; margin-bottom: 22px; }
+.hb-notfound-code { font-size: 15px; font-weight: 800; letter-spacing: 2px; color: var(--blue); margin-bottom: 10px; }
+.hb-notfound h1 { font-size: 26px; margin: 0 0 12px; letter-spacing: -.5px; }
+.hb-notfound p { color: var(--muted); font-size: 13px; margin: 0 0 26px; max-width: 380px; }
+
+@media (max-width: 900px) {
+  .hb-hero-inner { grid-template-columns: 1fr; }
+  .hb-hero-art { max-width: 480px; }
+  .hb-auth-shell { grid-template-columns: 1fr; }
+  .hb-auth-side { display: none; }
+}
+@media (max-width: 780px) {
+  .hb-pub-nav { padding: 0 20px; }
+  .hb-pub-nav-links, .hb-pub-nav-actions { display: none; }
+  .hb-pub-nav-mobile-toggle { display: block; }
+  .hb-hero { padding: 52px 20px; }
+  .hb-hero h1 { font-size: 32px; }
+  .hb-section { padding: 56px 20px; }
+  .hb-pub-footer { padding: 44px 20px 24px; }
+  .hb-pub-footer-inner { flex-direction: column; gap: 32px; }
+}
