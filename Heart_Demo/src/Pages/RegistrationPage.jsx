@@ -4,7 +4,7 @@ import Footer from '../components/Footer';
 import GeneralBar from '../components/GeneralBar';
 import { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom/dist/umd/react-router-dom.development';
+import { useNavigate } from 'react-router-dom';
 
 export default function Registration() {
   const [fullnames, setFullname] = useState('')
@@ -19,7 +19,7 @@ export default function Registration() {
     const role = "patient";
     try {
       if(password === confirmPWD && password.length > 8){
-        const response = await axios.post("http://localhost:3000/register", {fullnames, email, role, password})
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/register`, {fullnames, email, role, password})
         const data = response.data;
   
         if(data.success === true){
@@ -33,7 +33,7 @@ export default function Registration() {
 
     } catch (error) {
       console.error('Error registering this user:', error);
-      setMessage(error.response.data.message)
+      setMessage(error.response?.data?.message || 'Registration failed. Please check the API server.')
     }
   }
   return (

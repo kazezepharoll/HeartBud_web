@@ -4,7 +4,7 @@ import Footer from '../components/Footer';
 import GeneralBar from '../components/GeneralBar';
 import axios from 'axios'
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom/dist/umd/react-router-dom.development';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const [error, setError] = useState('')
@@ -16,21 +16,19 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:3000/login', { email, password });
+      const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+      const response = await axios.post(`${API}/login`, { email, password });
       const userData = response.data;
-      console.log(userData); // For debugging purposes
-
-      // Redirect users based on their role
-      if (userData.user === 'doctor') {
-        navigate('/doctor');
-      } else if (userData.user === 'patient') {
-        navigate('/patient');
-      } else {
-        navigate('/notFound')
-      }
+      const role = String(userData.userRole || '').toLowerCase();
+      localStorage.setItem('heartbud_token', userData.token || '');
+      localStorage.setItem('heartbud_user', JSON.stringify({ role, fullnames: userData.fullnames || '', email: email, userId: userData.userId }));
+      if (role === 'doctor') navigate('/doctor');
+      else if (role === 'patient') navigate('/patient');
+      else if (role === 'admin') navigate('/admin');
+      else navigate('/notfound');
     } catch (error) {
       console.error('Error logging in:', error);
-      setError(error.response.data.error)
+      setError(error.response?.data?.error || 'Unable to sign in. Check the API server and your credentials.')
       // Handle login error here and display a message to the user if needed
     }
   }

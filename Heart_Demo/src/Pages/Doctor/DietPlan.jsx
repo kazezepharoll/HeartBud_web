@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
-// Styles pour le conteneur principal
 const Container = styled.div`
   font-family: Arial, sans-serif;
   margin: 0 auto;
@@ -9,179 +10,145 @@ const Container = styled.div`
   padding: 20px;
 `;
 
-// Styles pour le formulaire
 const Form = styled.form`
   display: flex;
   flex-direction: column;
 `;
 
-// Styles pour les étiquettes
 const Label = styled.label`
   font-weight: bold;
   margin-top: 10px;
 `;
 
-// Styles pour les sélections
 const Select = styled.select`
   width: 100%;
   padding: 10px;
   margin-top: 5px;
 `;
 
-// Styles pour les champs de saisie
 const Input = styled.input`
-  width: 100%;
+  width: 97%;
   padding: 10px;
   margin-top: 5px;
 `;
 
-// Styles pour le bouton
 const Button = styled.button`
-  background-color: #007BFF;
+  background-color: green;
   color: white;
   border: none;
   padding: 10px;
   margin-top: 10px;
   cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
 `;
 
-// Styles pour le tableau
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
 `;
 
-// Styles pour les en-têtes de tableau
 const TableHead = styled.thead`
-  background-color: #007BFF;
+  background-color: green;
   color: white;
 `;
 
-// Styles pour les cellules d'en-tête de tableau
 const TableHeaderCell = styled.th`
   padding: 10px;
   text-align: left;
 `;
 
-// Styles pour les lignes de tableau
 const TableRow = styled.tr`
   &:nth-child(even) {
     background-color: #f2f2f2;
   }
 `;
 
-// Styles pour les cellules de tableau
 const TableCell = styled.td`
   padding: 10px;
   text-align: left;
 `;
 
-// Styles pour le bouton dans le tableau
 const RemoveButton = styled.button`
-  background-color: #DC3545;
+  background-color: #dc3545;
   color: white;
   border: none;
   padding: 5px 10px;
   cursor: pointer;
 `;
 
-// Structure initiale du plan de repas
-const initialMealPlan = {
-  Monday: {
-    Breakfast: [],
-    Lunch: [],
-    Dinner: [],
-    Snacks: [],
-  },
-  Tuesday: {
-    Breakfast: [],
-    Lunch: [],
-    Dinner: [],
-    Snacks: [],
-  },
-  Wednesday: {
-    Breakfast: [],
-    Lunch: [],
-    Dinner: [],
-    Snacks: [],
-  },
-  Thursday: {
-    Breakfast: [],
-    Lunch: [],
-    Dinner: [],
-    Snacks: [],
-  },
-  Friday: {
-    Breakfast: [],
-    Lunch: [],
-    Dinner: [],
-    Snacks: [],
-  },
-  Saturday: {
-    Breakfast: [],
-    Lunch: [],
-    Dinner: [],
-    Snacks: [],
-  },
-  Sunday: {
-    Breakfast: [],
-    Lunch: [],
-    Dinner: [],
-    Snacks: [],
-  }
-};
+const initialMealPlan = () => ({
+  Monday: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] },
+  Tuesday: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] },
+  Wednesday: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] },
+  Thursday: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] },
+  Friday: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] },
+  Saturday: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] },
+  Sunday: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] },
+});
 
 const DietPlan = () => {
   const [patientId, setPatientId] = useState('');
+  const [patients, setPatients] = useState([]);
   const [dietaryRestrictions, setDietaryRestrictions] = useState('');
-  const [mealPlan, setMealPlan] = useState(initialMealPlan);
+  const [mealPlan, setMealPlan] = useState(initialMealPlan());
   const [mealItem, setMealItem] = useState({ foodItem: '', quantity: '' });
   const [day, setDay] = useState('');
   const [mealType, setMealType] = useState('');
+  const [selectedDay, setSelectedDay] = useState('Monday'); // Initialize with a default day
+  const navigate = useNavigate();
 
-  // Function to add a meal item
-const handleAddMealItem = (e) => {
-  e.preventDefault();
-
-  if (mealItem.foodItem.trim() === '' || mealItem.quantity.trim() === '' || !day || !mealType) {
-    return;
-  }
-
-  setMealPlan((prevMealPlan) => {
-    const updatedPlan = { ...prevMealPlan };
-
-    // Make sure day and mealType are defined before pushing the meal item
-    if (!updatedPlan[day]) {
-      updatedPlan[day] = {};
-    }
-    if (!updatedPlan[day][mealType]) {
-      updatedPlan[day][mealType] = [];
+  useEffect(() => {
+    async function getPatients() {
+      try {
+        const patientData = await axios.get('http://localhost:3000/patients');
+        setPatients(patientData.data);
+      } catch (error) {
+        console.error(error);
+      }
     }
 
-    updatedPlan[day][mealType].push(mealItem);
+    getPatients();
+  }, []);
 
-    return updatedPlan;
-  });
+  const handleAddMealItem = (e) => {
+    e.preventDefault();
 
-  // Clear the input fields
-  setMealItem({ foodItem: '', quantity: '' });
-};
+    if (!mealItem.foodItem.trim() || !mealItem.quantity.trim() || !day || !mealType) {
+      return;
+    }
 
-  
-  
-
-  // Fonction pour supprimer un aliment du repas
-  const handleRemoveMealItem = (index, e) => {
-    e.preventDefault()
     setMealPlan((prevMealPlan) => {
       const updatedPlan = { ...prevMealPlan };
-      updatedPlan[day][mealType].splice(index, 1);
+      const newMealItem = { foodItem: mealItem.foodItem, quantity: mealItem.quantity };
+
+      if (!updatedPlan[day]) updatedPlan[day] = {};
+      if (!updatedPlan[day][mealType]) updatedPlan[day][mealType] = [];
+
+      const isDuplicate = updatedPlan[day][mealType].some(
+        (item) => item.foodItem === newMealItem.foodItem && item.quantity === newMealItem.quantity
+      );
+
+      if (!isDuplicate) updatedPlan[day][mealType].push(newMealItem);
+
+      return updatedPlan;
+    });
+
+    // Clear the input fields
+    setMealItem({ foodItem: '', quantity: '' });
+  };
+
+  const handleRemoveMealItem = (index) => {
+    setMealPlan((prevMealPlan) => {
+      const updatedPlan = { ...prevMealPlan };
+      if (updatedPlan[day] && updatedPlan[day][mealType]) {
+        updatedPlan[day][mealType] = updatedPlan[day][mealType].filter((item, itemIndex) => itemIndex !== index);
+      }
       return updatedPlan;
     });
   };
 
-  // Fonction pour gérer la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -192,88 +159,82 @@ const handleAddMealItem = (e) => {
     };
 
     try {
-      // Envoyer dietData à votre serveur ici
-      console.log('Données du régime à envoyer :', dietData);
+      // Send dietData to your server here
+      const dietResponse = await axios.post('http://localhost:3000/setmealplan', dietData);
 
-      // Réinitialiser les champs du formulaire et l'état du plan de repas si nécessaire
+      const data = dietResponse.data;
+
+      if (data.success) navigate('/Doctor/diet-plans');
+
       setPatientId('');
       setDietaryRestrictions('');
-      setMealPlan(initialMealPlan);
+      setMealPlan(initialMealPlan());
       setMealItem({ foodItem: '', quantity: '' });
-      setDay('');
-      setMealType('');
     } catch (error) {
-      console.error('Erreur :', error);
+      console.error('Error:', error);
     }
   };
 
-  console.log(mealPlan)
   return (
     <Container>
-      <h1>Planification du régime</h1>
+      <h1>Meal Plan</h1>
       <Form onSubmit={handleSubmit}>
         <div>
-          <Label htmlFor="patientId">Sélectionnez le patient :</Label>
-          <Select
-            id="patientId"
-            value={patientId}
-            onChange={(e) => setPatientId(e.target.value)}
-          >
-            <option value="1">Patient 1</option>
-            <option value="2">Patient 2</option>
-            {/* Ajoutez plus de patients */}
+          <Label htmlFor="patientId">Select a patient:</Label>
+          <Select id="patientId" value={patientId} onChange={(e) => setPatientId(e.target.value)}>
+            <option value="">Select a patient's name</option>
+            {patients.map((patient) => (
+              <option key={patient.idpatients} value={patient.idpatients}>
+                {patient.fullnames}
+              </option>
+            ))}
           </Select>
         </div>
 
         <div>
-          <h2>Constructeur de plan de repas</h2>
-          <Label htmlFor="day">Sélectionnez le jour :</Label>
-          <Select
-            id="day"
-            value={day}
-            onChange={(e) => setDay(e.target.value)}
-          >
-            <option value="">Sélectionnez un jour</option>
-            <option value="Monday">Lundi</option>
-            <option value="Tuesday">Mardi</option>
+          <h2>Meal Plan Builder</h2>
+          <Label htmlFor="day">Select a day:</Label>
+          <Select id="day" value={day} onChange={(e) => setDay(e.target.value)}>
+            <option value="">Select a day</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
             <option value="Wednesday">Wednesday</option>
             <option value="Thursday">Thursday</option>
             <option value="Friday">Friday</option>
             <option value="Saturday">Saturday</option>
             <option value="Sunday">Sunday</option>
-            
           </Select>
 
-          <Label htmlFor="mealType">Sélectionnez le type de repas :</Label>
+          <Label htmlFor="mealType">Select a meal type:</Label>
           <Select
             id="mealType"
             value={mealType}
             onChange={(e) => setMealType(e.target.value)}
           >
-            <option value="">Sélectionnez un type de repas</option>
-            <option value="Breakfast">Petit déjeuner</option>
+            <option value="">Select a meal type</option>
+            <option value="Breakfast">Breakfast</option>
             <option value="Lunch">Lunch</option>
             <option value="Dinner">Dinner</option>
             <option value="Snacks">Snack</option>
-            
           </Select>
 
           <Input
             type="text"
-            placeholder="Aliment"
+            placeholder="Food Item"
             value={mealItem.foodItem}
             onChange={(e) => setMealItem({ ...mealItem, foodItem: e.target.value })}
           />
           <Input
             type="text"
-            placeholder="Quantité"
+            placeholder="Quantity"
             value={mealItem.quantity}
             onChange={(e) => setMealItem({ ...mealItem, quantity: e.target.value })}
           />
-          <Button type="button" onClick={handleAddMealItem}>Ajouter</Button>
+          <Button type="button" onClick={handleAddMealItem}>
+            Add
+          </Button>
         </div>
 
-       
         <Table>
           <TableHead>
             <TableRow>
@@ -285,31 +246,31 @@ const handleAddMealItem = (e) => {
             </TableRow>
           </TableHead>
           <tbody>
-          {mealPlan[day] && mealPlan[day][mealType] ? (
-            mealPlan[day][mealType].map((item, index) => (
-              <TableRow key={index}>
-                <TableCell>{day}</TableCell>
-                <TableCell>{mealType}</TableCell>
-                <TableCell>{item.foodItem}</TableCell>
-                <TableCell>{item.quantity}</TableCell>
-                <TableCell>
-                  <RemoveButton onClick={() => handleRemoveMealItem(index)}>
-                    Remove
-                  </RemoveButton>
-                </TableCell>
+            {mealPlan[selectedDay] &&
+            mealPlan[selectedDay][mealType] ? (
+              mealPlan[selectedDay][mealType].map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>{selectedDay}</TableCell>
+                  <TableCell>{mealType}</TableCell>
+                  <TableCell>{item.foodItem}</TableCell>
+                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>
+                    <RemoveButton onClick={() => handleRemoveMealItem(index)}>
+                      Remove
+                    </RemoveButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan="5">No meal items for this day and meal type.</TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan="5">No meal items for this day and meal type.</TableCell>
-            </TableRow>
-          )}
-        </tbody>
-        
+            )}
+          </tbody>
         </Table>
-        
+
         <div>
-          <Label htmlFor="dietaryRestrictions">Restrictions alimentaires :</Label>
+          <Label htmlFor="dietaryRestrictions">Dietary Restrictions:</Label>
           <Input
             type="text"
             id="dietaryRestrictions"
@@ -318,10 +279,10 @@ const handleAddMealItem = (e) => {
           />
         </div>
 
-        <Button type="submit">Créer un plan de repas</Button>
+        <Button type="submit">Create Meal Plan</Button>
       </Form>
     </Container>
-  );
+  );    
 };
 
 export default DietPlan;

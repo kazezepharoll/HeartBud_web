@@ -1,62 +1,14 @@
-
-import { BrowserRouter, Route,  Routes } from 'react-router-dom';
-
-import Home from './Pages/Home';
-import Predictor from './Pages/Patient/Predictor';
-import EmailForm from './components/EmailForm';
-import Dashboard from './Pages/Patient/Dashboard';
-import Prescription from './Pages/Patient/Prescription';
-import Notification from './Pages/Patient/Notification';
-import Diet from './Pages/Patient/Diet';
-import DasboardDoc from './Pages/Doctor/DashboardDoc';
-import PatientDetails from './Pages/Doctor/PatientDetails';
-import Appointment from './Pages/Doctor/Appointment';
-import AppointmentRequest from './Pages/Doctor/AppointmentRequest';
-import PrescriptionManagement from './Pages/Doctor/PrescriptionManagement';
-import Registration from './Pages/RegistrationPage';
-import Login from './Pages/LoginPage';
-import NotFound from './Pages/NotFound';
-import ResetPassword from './Pages/ResetPasswordPage';
-import GetPasscode from './Pages/GetPasscodePage';
-import VerifyPasscodePage from './Pages/VerifyPasscodePage';
-import Appointments from './Pages/Doctor/appointments';
-import PrescriptionList from './Pages/Doctor/PrescriptionList';
-import DietPlan from './Pages/Doctor/DietPlan';
-
-
-
-const App = () => {
-  return (
-    <BrowserRouter>
-      <div>
-
-        <Routes>
-          <Route  path="/" element={<Home />} />
-          <Route  path="/login" element={<Login/>} />
-          <Route  path="/register" element={<Registration />} />
-          <Route path="/predict" element={<Predictor />} />
-          <Route path="/email" element={<EmailForm />} />
-          <Route path="/Patient" element={<Dashboard />} />
-          <Route path="/Patient/Prescription" element={<Prescription />} />
-          <Route path="/Patient/Notification" element={<Notification />} />
-          <Route path="/Patient/diet" element={<Diet />} />
-          <Route path="/Doctor" element={<DasboardDoc />} />
-          <Route path="/Doctor/setdiet" element={<DietPlan/>} />
-          <Route path="/Doctor/patient" element={<PatientDetails />} />
-          <Route path="/Doctor/appointment" element={<Appointment />} />
-          <Route path="/Doctor/listappointment" element={<Appointments />} />
-          <Route path="/Doctor/request" element={<AppointmentRequest />} />
-          <Route path="/Doctor/prescription" element={<PrescriptionManagement />} />
-          <Route path="/Doctor/listPrescriptions" element={<PrescriptionList />} />
-          <Route path="/getpasscode" element={<GetPasscode />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify-passcode" element={<VerifyPasscodePage />} />
-          <Route  path="/notfound" element={<NotFound/>} />
-        </Routes>
-      </div>
-    </BrowserRouter>
-  );
-};
-
-export default App;
-
+import {BrowserRouter,Routes,Route,Navigate} from 'react-router-dom';
+import Home from './Pages/Home.jsx';import Login from './Pages/LoginPage.jsx';import Registration from './Pages/RegistrationPage.jsx';import NotFound from './Pages/NotFound.jsx';import ResetPassword from './Pages/ResetPasswordPage.jsx';import GetPasscode from './Pages/GetPasscodePage.jsx';import VerifyPasscode from './Pages/VerifyPasscodePage.jsx';
+import PatientDashboard from './v2/PatientDashboard.jsx';import DoctorDashboard from './v2/DoctorDashboard.jsx';import AdminDashboard from './v2/AdminDashboard.jsx';
+import {PatientAssessment,PatientAppointments,PatientPrescriptions,PatientDiet,PatientNotifications} from './v2/PatientPages.jsx';
+import PatientVitals from './v2/PatientVitals.jsx';import DoctorAlerts from './v2/DoctorAlerts.jsx';
+import { StatusBadge } from './v2/AppShell.jsx';import {DoctorPatients,DoctorPatient,DoctorAppointments,DoctorPrescriptions,DoctorDietPlans,DoctorPredictions} from './v2/DoctorPages.jsx';import {AdminUsers,AdminSimple} from './v2/AdminPages.jsx';
+import './v2/design.css';
+export default function App(){return <BrowserRouter><Routes>
+<Route path="/" element={<Home/>}/><Route path="/login" element={<Login/>}/><Route path="/register" element={<Registration/>}/><Route path="/getpasscode" element={<GetPasscode/>}/><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/verify-passcode" element={<VerifyPasscode/>}/>
+<Route path="/patient" element={<PatientDashboard/>}/><Route path="/patient/vitals" element={<PatientVitals/>}/><Route path="/patient/prediction" element={<PatientAssessment/>}/><Route path="/patient/appointments" element={<PatientAppointments/>}/><Route path="/patient/prescriptions" element={<PatientPrescriptions/>}/><Route path="/patient/diet" element={<PatientDiet/>}/><Route path="/patient/notifications" element={<PatientNotifications/>}/>
+<Route path="/Patient/*" element={<Navigate to="/patient" replace/>}/>
+<Route path="/doctor" element={<DoctorDashboard/>}/><Route path="/doctor/patients" element={<DoctorPatients/>}/><Route path="/doctor/patient" element={<DoctorPatient/>}/><Route path="/doctor/alerts" element={<DoctorAlerts/>}/><Route path="/doctor/appointments" element={<DoctorAppointments/>}/><Route path="/doctor/prescriptions" element={<DoctorPrescriptions/>}/><Route path="/doctor/diet-plans" element={<DoctorDietPlans/>}/><Route path="/doctor/predictions" element={<DoctorPredictions/>}/><Route path="/doctor/predict" element={<DoctorPredictions/>}/><Route path="/Doctor/*" element={<Navigate to="/doctor" replace/>}/>
+<Route path="/admin" element={<AdminDashboard/>}/><Route path="/admin/users" element={<AdminUsers/>}/><Route path="/admin/patients" element={<AdminUsers/>}/><Route path="/admin/doctors" element={<AdminUsers/>}/><Route path="/admin/predictions" element={<AdminSimple title="Prediction activity" subtitle="Operational visibility for HeartBud model usage." body={<div className="hb-empty">Prediction history will appear here when assessment results are persisted with a prediction record.</div>}/>}/><Route path="/admin/appointments" element={<AdminSimple title="Appointments" subtitle="Operational appointment management." body={<div className="hb-empty">Connect appointment records to this admin view during backend migration.</div>}/>}/><Route path="/admin/prescriptions" element={<AdminSimple title="Prescriptions" subtitle="Operational prescription records." body={<div className="hb-empty">Connect prescription records to this admin view during backend migration.</div>}/>}/><Route path="/admin/activity" element={<AdminSimple title="Activity log" subtitle="Review important system events." body={<div className="hb-list"><div className="hb-list-row"><div><strong>Admin portal opened</strong><span>HeartBud V2 workspace initialized</span></div><StatusBadge tone="neutral">System</StatusBadge></div><div className="hb-list-row"><div><strong>Clinical decision-support workflow</strong><span>Model output should remain subject to clinician review</span></div><StatusBadge tone="healthy">Info</StatusBadge></div></div>}/>}/><Route path="/admin/settings" element={<AdminSimple title="Settings" subtitle="Portal configuration and security controls." body={<div className="hb-alert"><strong>Security migration required</strong>Move database credentials and JWT secrets to server environment variables before production deployment.</div>}/>}/>
+<Route path="*" element={<NotFound/>}/></Routes></BrowserRouter>}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
 import NavBar from '../../components/NavBar';
+import MedicineTable from '../../components/MedicineTable';
 
 const Container = styled.div`
   width: 80%;
@@ -22,6 +23,7 @@ const PrescriptionCard = styled.div`
 const PatientName = styled.h3`
   font-size: 1.2rem;
   margin-bottom: 10px;
+  color: blue;
 `;
 
 const MedicinesList = styled.ul`
@@ -38,10 +40,16 @@ const Recommendation = styled.p`
   font-style: italic;
   background: grey;
   padding: 10px 15px;
+
+  b{
+    color: green;
+    font-size: 20px;
+  }
 `;
 
 function PrescriptionList() {
   const [prescriptions, setPrescriptions] = useState([]);
+  
 
   useEffect(() => {
     // Fetch prescription data from your backend API
@@ -50,14 +58,16 @@ function PrescriptionList() {
       .then(async (response) => {
         const prescriptionData = response.data.data;
 
+        console.log(prescriptionData)
         // Fetch patient names for each prescription
         const prescriptionsWithNames = await Promise.all(
           prescriptionData.map(async (prescription) => {
             const patientResponse = await axios.get(
-              `http://localhost:3000/patients/${prescription.patient_id}`
+              `http://localhost:3000/patients/${prescription.id_patient}`
             );
             const patientName = patientResponse.data;
 
+            
             return {
               ...prescription,
               patient_name: patientName[0].fullnames,
@@ -82,13 +92,7 @@ function PrescriptionList() {
         <PrescriptionCard key={prescription.idprescriptions}>
           <PatientName>Patient Name: {prescription.patient_name}</PatientName>
           <h3>Prescribed Medicines:</h3>
-          <MedicinesList>
-            {JSON.parse(prescription.medicine).map((medicine) => (
-              <MedicineItem key={medicine.idmedicine}>
-                Name: {medicine.name} - Dosage: {medicine.dosage} - Description: {medicine.description}
-              </MedicineItem>
-            ))}
-          </MedicinesList>
+           <MedicineTable prescription={prescription}/>
 
           <Recommendation><b>Recommendation:</b> {prescription.recommendation}</Recommendation>
         </PrescriptionCard>

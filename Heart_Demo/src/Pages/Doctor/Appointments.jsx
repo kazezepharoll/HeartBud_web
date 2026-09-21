@@ -126,7 +126,7 @@ function Appointments() {
             {loading?(<p>Loading appointments...</p>):(
              appointments.map((appointment) => (
              <div key={appointment.idappointment} className="item2">
-                 <p>{appointment.day}</p>
+                 <p>{appointment.date}</p>
                  <p>{appointment.purpose}</p>
                  <button onClick={()=>{ const id =appointment.idappointment; handleDelete(id)}}>remove</button>
                </div>

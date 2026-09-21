@@ -1,41 +1,43 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import styled from 'styled-components'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
 
 
 export default function MeetingForm() {
-  const [purpose, setPurpose] = useState()
-  const [day, setDay] = useState();
-  const [details, setDetails] = useState();
-  const [error, setError] = useState();
-
-  const [date, setDate] = useState();
-  const [amOrPm, setAmOrPm] = useState('');
-  const [time, setTime] = useState();
-const navigate = useNavigate()
+  const [purpose, setPurpose] = useState('')
+  const [details, setDetails] = useState('');
+  const [patients, setPatients] = useState([])
+  const [patientId, setPatientId] = useState('');
+  const [error, setError] = useState('');
+  const [date, setDate] = useState('');
+  const navigate = useNavigate()
 
 
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const patientID = await axios.get('http://localhost:3000/patients');
+        console.log(patientID.data[0].idpatients);
+
+        setPatients(patientID.data)
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  
+    fetchData();
+  }, []);
+  
 
   const handleClick = async (e)=>{
     e.preventDefault()
     
-    if (!amOrPm) {
-      setError('Please select AM or PM.');
-      console.log(error)
-      return;
-    }
-  
-    // Combine the selected hour, minute, and amOrPm to create the formatted time
-    const formattedTime = `${date} ${amOrPm}`;
-  
     try {
-      setTime((prevTime) => {
-        // Set the formattedTime directly
-        return formattedTime;
-      });
+
       
-      const response = await axios.post("http://localhost:3000/appointment", {purpose, day, time: formattedTime, details});
+      const response = await axios.post("http://localhost:3000/appointment", {purpose, date,  details, patientId});
 
       const responseData = response.data;
 
@@ -57,61 +59,35 @@ const navigate = useNavigate()
         <form className="MainContainer" action="" method="post">
         <div className="header">
         <h1>Schedule Appointment</h1>
-        <h3>Patient Name: their names</h3>
-        <h3>Patient ID: their Id</h3>
-      </div>
+        </div>
       <div className="Main">
-        <div className="wrap">
-        <label htmlFor="purpose">Purpose: </label>
-        <input type="text" name="purpose" id="purpose" value={purpose} onChange={(e)=> setPurpose(e.target.value)} className='purpose'/> 
+      <div className="wrap">
+        <label htmlFor="">Patient ID:</label> <b style={{color: 'green', width: '520px'}} >Patient_X00{patientId}</b>
+        </div>
+
+          <div className="wrap">
+        <label>Patient Name: </label>
+        <select className='select' value={patientId} onChange={(e)=> setPatientId(e.target.value)}  style={{width: '500px'}}>
+          <option>Patients Name</option>
+          {patients.map(patient=>(
+            <option value={patient.idpatients} key={patient.idpatients}>{patient.fullnames}</option>
+            ))}
+        </select>
         </div>
         <div className="wrap">
-          <label htmlFor="Day">Date: </label>
-          <input type="Date" name="date" id="date" value={day} onChange={(e)=> setDay(e.target.value)} className='purpose'/> 
-          {/* <select name="Date" className='day select' value={day} onChange={(e) => setDay(e.target.value)}>
-            <option value="">Choose a Day</option>
-            <option value="Saturday">Saturday</option>
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-            {/* ...and so on for other days */}
-          {/* </select>  */}
-         </div>
+        <label htmlFor="purpose">Purpose: </label>
+        <input type="text" name="purpose" id="purpose" value={purpose} onChange={(e)=> setPurpose(e.target.value)} className='select'/> 
+        </div>
 
 <div className="wrap">
 
 <label>Time:</label>
-<input type="time" name="date" className='select' value={date} id="" onChange={(e)=> setDate(e.target.value)}/>
-
-  <input
-  className='time'
-    type="radio"
-    id="am"
-    name="amPm"
-    value="AM"
-    checked={amOrPm === "AM"}
-    onChange={() => setAmOrPm("AM")}
-  />
-  <label htmlFor="am">AM</label>
-
-  <input
-  className='time'
-    type="radio"
-    id="pm"
-    name="amPm"
-    value="PM"
-    checked={amOrPm === "PM"}
-    onChange={() => setAmOrPm("PM")}
-  />
-  <label htmlFor="pm">PM</label>
-
+<input type="datetime-local" name="date" className='select' value={date} id="" onChange={(e)=> setDate(e.target.value)}/>
 
  </div >
         <div className="wrap">
         <label htmlFor="Details">Details: </label>
-        <input type="textarea" name="Details" id="Details" value={details} onChange={(e)=> setDetails(e.target.value)} className='purpose'/>
+        <input type="textarea" name="Details" id="Details" value={details} onChange={(e)=> setDetails(e.target.value)} className='select'/>
         </div>
 
         </div>
@@ -142,7 +118,7 @@ const Container = styled.div`
     flex-direction: column;
   }
   .Main{
-    width:70%; 
+    width: 100%; 
     display: flex;
     justify-content: space-around;
     align-items: baseline;
@@ -177,10 +153,6 @@ const Container = styled.div`
     display: inline-block;
     width: 70px;
   }
-  .select{
-    display: inline-block;
-    width: 200px;
-  }
   .wrap{
     width: 100%;
     display: flex;
@@ -192,9 +164,6 @@ const Container = styled.div`
   }
   label{
     margin-right: 30px;
-  }
-  .purpose{
-    width: 460px;
   }
 
 `

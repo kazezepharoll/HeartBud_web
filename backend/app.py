@@ -58,8 +58,8 @@ def predict():
     prediction_list = [str(item) for item in prediction_list]
 
     # Return the prediction as a JSON response
-    return jsonify({'prediction': prediction_list})
+    return jsonify({'prediction': prediction_list[0] if prediction_list else None})
 
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=5173, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

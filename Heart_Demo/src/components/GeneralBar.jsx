@@ -8,8 +8,8 @@ width: 100%;
 display: flex;
 justify-content: space-evenly;
 align-items: center;
-font-size: 22px;
-height: 100px;
+font-size: 18px;
+height: 70px;
 background-color: #078d46;
 box-shadow: 4px 3px 5px black;
 
@@ -20,10 +20,12 @@ a,li{
     color: aliceblue;
     padding: 20px;
 }
+
 a:hover,li:hover{
   cursor: pointer;
   border-bottom: 3px solid yellow;
 }
+
 a{
   text-decoration: none;
   color: white;
