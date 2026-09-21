@@ -1,12 +1,19 @@
 import mysql from 'mysql';
 import bcrypt from 'bcrypt';
 
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'heartbud'
-  });
+// Accepts either a single connection URL (DATABASE_URL / MYSQL_URL — what
+// Railway's MySQL plugin suggests, e.g. `${{MySQL.MYSQL_PRIVATE_URL}}`) or
+// the four discrete DB_* variables used for local development.
+const connectionUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+
+const connection = connectionUrl
+  ? mysql.createConnection(connectionUrl)
+  : mysql.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'heartbud',
+    });
 
   // const saltRounds = 10;
   // const plaintextPassword = '1234';
