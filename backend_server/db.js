@@ -1,4 +1,7 @@
-import mysql from 'mysql';
+// mysql2, not the legacy `mysql` package: MySQL 8+/9+ defaults new users to
+// the caching_sha2_password auth plugin, which the unmaintained `mysql`
+// package cannot speak at all (ER_NOT_SUPPORTED_AUTH_MODE on every connection).
+import mysql from 'mysql2';
 import bcrypt from 'bcrypt';
 
 // Accepts either a single connection URL (DATABASE_URL / MYSQL_URL — what
