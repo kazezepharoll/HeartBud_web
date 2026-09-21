@@ -1,6 +1,12 @@
 flask
 flask-cors
+gunicorn
 joblib
 numpy
 pandas
+# The checked-in .pkl models were trained with scikit-learn 1.2.2. Newer
+# scikit-learn can unpickle them (verified) with a version-mismatch warning;
+# pinning to 1.2.2 was tried and rejected because it is binary-incompatible
+# with current numpy/pandas. Retrain and re-save the models if this ever
+# breaks instead of pinning scikit-learn down.
 scikit-learn

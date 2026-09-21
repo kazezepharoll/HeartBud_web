@@ -63,3 +63,46 @@ This is decision-support tooling, not a diagnostic device — the thresholds are
 ## Security
 
 Database, JWT and SMTP credentials are read from environment variables (see `backend_server/.env.example`). Never commit real secrets.
+
+## Deploying to Railway
+
+All three services plus MySQL can live in one Railway project. Each service points at this same GitHub repo/branch but with a different **Root Directory**, so create them one at a time from the Railway dashboard (railway.app → New Project):
+
+### 1. Database
+- **+ New → Database → Add MySQL.** Railway provisions it and exposes connection variables (`MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`) that other services in the project can reference.
+- Load the schema once, from your machine, using the connection details shown on the MySQL service's **Connect** tab:
+  ```bash
+  mysql -h <MYSQLHOST> -P <MYSQLPORT> -u <MYSQLUSER> -p<MYSQLPASSWORD> < backend_server/db/schema.sql
+  ```
+
+### 2. Node API (`backend_server`)
+- **+ New → GitHub Repo**, pick this repo, then in **Settings → Root Directory** set `backend_server`.
+- **Variables** tab — add, referencing the MySQL service by name (Railway autocompletes these):
+  ```
+  DB_HOST=${{MySQL.MYSQLHOST}}
+  DB_USER=${{MySQL.MYSQLUSER}}
+  DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
+  DB_NAME=${{MySQL.MYSQLDATABASE}}
+  JWT_SECRET=<generate a random secret>
+  SMTP_USER=<your Gmail address, or leave unset to disable email features>
+  SMTP_PASS=<a Gmail app password>
+  ```
+  `PORT` is injected by Railway automatically — the server already reads it.
+- **Settings → Networking → Generate Domain** to get a public URL, e.g. `https://heartbud-api.up.railway.app`.
+
+### 3. ML API (`backend`)
+- **+ New → GitHub Repo**, same repo, **Root Directory** = `backend`. Railway detects Python from `requirements.txt` and runs the `Procfile` (`gunicorn app:app`).
+- No required variables; `PORT` is injected automatically.
+- **Generate Domain** here too, e.g. `https://heartbud-ml.up.railway.app`.
+
+### 4. Frontend (`Heart_Demo`)
+- **+ New → GitHub Repo**, same repo, **Root Directory** = `Heart_Demo`. Railway runs `npm run build` then the `Procfile` (`vite preview`).
+- **Variables** — set these to the two public URLs generated above (Vite bakes them in at build time, so set them *before* the first deploy, or trigger a redeploy after adding them):
+  ```
+  VITE_API_BASE_URL=https://heartbud-api.up.railway.app
+  VITE_ML_API_URL=https://heartbud-ml.up.railway.app
+  ```
+- **Generate Domain** for the frontend — that URL is the live app.
+
+Because Web Bluetooth requires a secure context, the Bluetooth wearable connection works on the Railway HTTPS domain the same way it does on `localhost`.
+

@@ -662,7 +662,9 @@ app.post('/alerts/:id/acknowledge', (req, res) => {
   );
 });
 
-// Start the server (HTTP + WebSocket share the same port).
-httpServer.listen(3000, () => {
-  console.log('Server is running on port 3000');
+// Start the server (HTTP + WebSocket share the same port). Hosts like
+// Railway assign the port dynamically via $PORT.
+const PORT = process.env.PORT || 3000;
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
